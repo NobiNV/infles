@@ -1,9 +1,12 @@
 package ru.boomik.infles;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -17,15 +20,33 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 public class InflesActivity extends Activity {
-    /** Called when the activity is first created. */
-	
+    
+	private static final String LOG_TAG = "Infles:InflesActivity";
 	boolean resCopy;
+	String[] wrong = {
+			"images",
+			"sounds",
+			"webkit"
+			};
+	
+	//!!SETTING:
 	/*
-	 * example: 
+	 * COPY_DIR - directory on SD card for copy files 
+	 *  example: 
 	 * "Infles" (Copy files to /sdcard/Infles/)
 	 * "Infles/subdir" (Copy files to /sdcard/Infles/subdir/)
 	 */
-	String COPY_DIR = "Infles/subdir";
+	/*
+	 * UNZIP - unzipped *.zip files?
+	 */
+	/*
+	 * DEL_ZIP - delete all zip files;
+	 */
+	 
+	boolean UNZIP = true;
+	boolean DEL_ZIP = true;
+	String COPY_DIR = "Infles";
+	
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,23 +62,43 @@ public class InflesActivity extends Activity {
         public void onClick(View v)
         {          
         	startService(new Intent(InflesActivity.this,InflesService.class));
-           
-        	//CopyAssets();
+        	String dir="/"+COPY_DIR+"/"; //  Add splash =)
+        	String sdDir="/sdcard" +dir;
+
         	AssetManager am = getAssets();
         	 
         	 try {
 				String[] files = am.list("");
 				for(int i=0; i<files.length; i++) {
-					Log.i("CopyFileFromAssetsToSD", "files["+i+"]="+files[i]+"\"");
-					copy(files[i],COPY_DIR);
+					if (!CheckMass(files[i],wrong)) {
+						
+					dirChecker(dir); // checking dirrectory
+					copy(files[i],dir);
+					if (UNZIP) {
+						
+						String filename = files[i];
+						int dotPos = filename.lastIndexOf(".");
+						String ext = filename.substring(dotPos);
+						if (ext.equals(".zip")) {
+							File File = new File(Environment.getExternalStorageDirectory()+ dir + filename); 
+							if (File.exists()) {
+								unzip(File,sdDir,dir);
+								if (DEL_ZIP) {
+									File.delete();
+								}
+							}
+							else Log.i(LOG_TAG, dir + filename+" not exists");
+						
+						}
+					}
 				}
+			}
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
         	 
 			
-
 
         	stopService(new Intent(InflesActivity.this,InflesService.class));
         	
@@ -70,10 +111,8 @@ public class InflesActivity extends Activity {
 
     private boolean copy(String fileName, String dir) {
 	    try {
-	    	dir="/"+dir+"/";
+	    	
 	    	AssetManager am = getAssets();
-	    	File Directory = new File("/sdcard"+dir);
-	    	Directory.mkdirs();
 	        File destinationFile = new File(Environment.getExternalStorageDirectory()+ dir + fileName);    
 	        InputStream in = am.open(fileName);
 	        FileOutputStream f = new FileOutputStream(destinationFile); 
@@ -85,59 +124,58 @@ public class InflesActivity extends Activity {
 	        f.close();
 	        resCopy=true;
 	    } catch (Exception e) {
-	        Log.d("CopyFileFromAssetsToSD", e.getMessage());
+	        Log.d(LOG_TAG, e.getMessage());
 	        resCopy=false;
 	    }
 	return resCopy;   
     }
     
-    
-    /*
-    private void CopyAssets() {
-    	Log.i("Infles!!", "CopyAssets");
-	    AssetManager assetManager = getAssets();
-	    String[] files = {
-	            "def_android.apk",
-	            "kursyak_Yulya.doc",
-	            "jimm.txt",
-	            "Jimm.db",
-	            "Getting Started.pdf",
-	            "extensions"
-	    };
-	    
-	    try {
-	        files = assetManager.list("assets");
-	        Log.i("Infles!!", "try");
-	    } catch (IOException e) {
-	        Log.e("Infles!!", e.getMessage());
-	    }
-	    Log.i("Infles!!", "befor");
-	    for(int i=0; i<files.length; i++) {
-	    	Log.i("Infles!!", "for");
-	        InputStream in = null;
-	        OutputStream out = null;
-	        try {
-	        	Log.i("Infles!!", "for try");
-	          in = assetManager.open(files[i]);
-	          Log.i("Infles!!", "files[i]"+files[i]);
-	          out = new FileOutputStream("/sdcard/Infles/" + files[i]);
-	          copyFile(in, out);
-	          in.close();
-	          in = null;
-	          out.flush();
-	          out.close();
-	          out = null;
-	        } catch(Exception e) {
-	            Log.e("Infles!!", e.getMessage());
-	        }       
-	    }
-	}
-	private void copyFile(InputStream in, OutputStream out) throws IOException {
-		Log.i("Infles!!", "copyFile");
-	    byte[] buffer = new byte[1024];
-	    int read;
-	    while((read = in.read(buffer)) != -1){
-	      out.write(buffer, 0, read);
-	    }
-	}*/
-}
+    public void unzip(File zip,String location,String dir) 
+    {
+    	Log.i(LOG_TAG,zip +" unzipped");
+        try  {
+          FileInputStream fin = new FileInputStream(zip);
+          ZipInputStream zin = new ZipInputStream(fin);
+          ZipEntry ze = null;
+          while ((ze = zin.getNextEntry()) != null) {
+
+            if(ze.isDirectory()) {
+              dirChecker(dir+ze.getName());
+            } else {
+              FileOutputStream fout = new FileOutputStream(location + ze.getName());
+              for (int c = zin.read(); c != -1; c = zin.read()) {
+                fout.write(c);
+              }
+
+              zin.closeEntry();
+              fout.close();
+            }
+
+          }
+          zin.close();
+        } catch(Exception e) {
+        }
+
+      }
+
+      private void dirChecker(String dir) {
+    	  File Directory = new File("/sdcard"+dir);
+    	  Log.i(LOG_TAG,"/sdcard"+dir +" - dir check");
+    	  if(!Directory.isDirectory()) {
+          Directory.mkdirs();
+    	  }
+      }
+      
+      static public boolean CheckMass(String text, String[] arr)
+		{
+			boolean res=false;
+			int strLenght=arr.length;
+	        for (int i=0;i<strLenght;i++){
+	        	if (text.equals(arr[i])){
+	                res=true;
+	                break;
+	            }}
+	        return res;
+	        }
+
+ }
