@@ -2,5 +2,5 @@
 <LinearLayout android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
-    <Button android:text="Button" android:id="@+id/ActButton" android:layout_height="fill_parent" android:layout_width="fill_parent"></Button>
+    <Button android:text="RUN!" android:id="@+id/ActButton" android:layout_height="fill_parent" android:layout_width="fill_parent" android:textSize="100dip"></Button>
 </LinearLayout>
