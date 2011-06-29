@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Infles</string>
+    <string name="local_service_started">Infles</string>
+    <string name="local_service_stopped">Service stop</string> 
+    <string name="local_service_label">Infles</string>
+</resources>
