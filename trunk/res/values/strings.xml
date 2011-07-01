@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Infles Jasmin Smileys</string>
+    <string name="app_name">Infles</string>
     <string name="local_service_started">Infles</string>
-    <string name="local_service_stopped">Install complete, pls del packages</string> 
+    <string name="local_service_stopped">Install complete, please delete packages</string> 
     <string name="local_service_label">Infles</string>
 </resources>
