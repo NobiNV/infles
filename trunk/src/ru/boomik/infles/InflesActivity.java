@@ -1,3 +1,22 @@
+/* InflesActivity.java
+ *
+ * Copyright 2011 Kirill Ashikhmin
+ * All Rights Reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ * 
+ */
 package ru.boomik.infles;
 
 import java.io.File;
@@ -9,19 +28,30 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 public class InflesActivity extends Activity {
     
 	private static final String LOG_TAG = "Infles:InflesActivity";
+	private static final int ABOUT = 1;
+	private static final int PROGRESS = 2;
 	boolean resCopy;
 	String[] wrong = {
 			"images",
@@ -42,7 +72,10 @@ public class InflesActivity extends Activity {
 	/*
 	 * DEL_ZIP - delete all zip files;
 	 */
-	 
+	/*
+	 * SHOW_BUTTON - show 3 buttons after "RUN!" button
+	 */
+	boolean SHOW_BUTTON = true; 
 	boolean UNZIP = true;
 	boolean DEL_ZIP = true;
 	String COPY_DIR = "Infles";
@@ -54,61 +87,144 @@ public class InflesActivity extends Activity {
         setContentView(R.layout.main);
         
         Button ActButton = (Button)findViewById(R.id.ActButton);
-        ActButton.setOnClickListener(mStartListener);
+        Button Exit = (Button)findViewById(R.id.exit);
+        Button About = (Button)findViewById(R.id.about);
+        Button Delete = (Button)findViewById(R.id.delete);
+        ActButton.setOnClickListener(ActListener);
+        Exit.setOnClickListener(ExitListener);
+        About.setOnClickListener(AboutListener);
+        Delete.setOnClickListener(DeleteListener);    
+        
+        if (!SHOW_BUTTON) {
+        	 Exit.setVisibility(View.GONE);
+        	 About.setVisibility(View.GONE);
+        	 Delete.setVisibility(View.GONE);
+        }
         
     }
     
-    private OnClickListener mStartListener = new OnClickListener() {
+    private OnClickListener ActListener = new OnClickListener() {
         public void onClick(View v)
-        {          
-        	startService(new Intent(InflesActivity.this,InflesService.class));
-        	String dir="/"+COPY_DIR+"/"; //  Add splash =)
-        	String sdDir="/sdcard" +dir;
-
-        	AssetManager am = getAssets();
-        	 
-        	 try {
-				String[] files = am.list("");
-				for(int i=0; i<files.length; i++) {
-					if (!CheckMass(files[i],wrong)) {
-						
-					dirChecker(dir); // checking dirrectory
-					copy(files[i],dir);
-					if (UNZIP) {
-						
-						String filename = files[i];
-						int dotPos = filename.lastIndexOf(".");
-						String ext = filename.substring(dotPos);
-						if (ext.equals(".zip")) {
-							File File = new File(Environment.getExternalStorageDirectory()+ dir + filename); 
-							if (File.exists()) {
-								unzip(File,sdDir,dir);
-								if (DEL_ZIP) {
-									File.delete();
-								}
-							}
-							else Log.i(LOG_TAG, dir + filename+" not exists");
-						
-						}
-					}
-				}
-			}
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        	 
-			
-
-        	stopService(new Intent(InflesActivity.this,InflesService.class));
+        {      
+        	showDialog(PROGRESS);
         	
-        	Uri packageURI = Uri.parse("package:ru.boomik.infles");
-            Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
-            startActivity(uninstallIntent);
-           
+        	startService(new Intent(InflesActivity.this,InflesService.class));
+        	final String dir="/"+COPY_DIR+"/"; //  Add splash =)
+        	final String sdDir="/sdcard" +dir;
+
+        	final AssetManager am = getAssets();
+        	        	
+        	new Thread(new Runnable() {
+                public void run() { 
+                	
+                	try {
+        				String[] files = am.list("");
+        				for(int i=0; i<files.length; i++) {
+        					if (!CheckMass(files[i],wrong)) {
+        						
+        					dirChecker(dir); // checking directory
+        					copy(files[i],dir);
+        					if (UNZIP) {
+        						
+        						String filename = files[i];
+        						int dotPos = filename.lastIndexOf(".");
+        						String ext = filename.substring(dotPos);
+        						if (ext.equals(".zip")) {
+        							File File = new File(Environment.getExternalStorageDirectory()+ dir + filename); 
+        							if (File.exists()) {
+        								unzip(File,sdDir,dir);
+        								if (DEL_ZIP) {
+        									File.delete();
+        								}
+        							}
+        							else Log.i(LOG_TAG, dir + filename+" not exists");
+        						
+        						}
+        					}
+        				}
+        			}
+        			} catch (IOException e1) {
+        				e1.printStackTrace();
+        			}
+                	
+                    InflesActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            dismissDialog(PROGRESS);
+                        }
+                    });
+                }
+            }).start();
+        	
+        	exit();
+        	DeleteApp();          
+        }
+    }; 
+     
+    private OnClickListener ExitListener = new OnClickListener() {
+        public void onClick(View v)
+        { 
+        exit();
         }
     };
-
+    
+    private OnClickListener AboutListener = new OnClickListener() {
+        public void onClick(View v)
+        { 
+        	showDialog(ABOUT);       	
+        }
+    };
+        
+    private OnClickListener DeleteListener = new OnClickListener() {
+        public void onClick(View v)
+        { 	
+        	exit();
+        	DeleteApp();	
+        }
+    }; 
+    
+    private void exit() {
+    finish();
+    stopService(new Intent(InflesActivity.this,InflesService.class));
+    }
+    
+    private void DeleteApp() {
+    	Uri packageURI = Uri.parse("package:ru.boomik.infles");
+        Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
+        startActivity(uninstallIntent);
+    }
+    
+    protected Dialog onCreateDialog(int id) {
+        super.onCreateDialog(id);
+     //   LinearLayout confirmView = new LinearLayout(this);
+        switch(id) {
+        case ABOUT:
+        	//Context mContext = getApplicationContext();
+        	Dialog dialog = new Dialog(this);
+        	dialog.setContentView(R.layout.about);
+        	dialog.setTitle("About");	
+        	TextView text = (TextView) dialog.findViewById(R.id.text);
+        	text.setText(Html.fromHtml("Infles - programm from copy files from app to SD card.<br /><br />Author: Kirill \"BOOM\" Ashikhmin<br />Email: <a href=\"mailto:boom.vrn@gmail.com\">boom.vrn@gmail.com</a><br />Site: <a href=\"http://boomik.ru\">http://boomik.ru</a><br />Source: <a href=\"http://code.google.com/p/infles/\">http://code.google.com/p/infles/</a><br /><br />License: GNU GPL v2."));
+        	text.setMovementMethod(LinkMovementMethod.getInstance());
+        	ImageView image = (ImageView) dialog.findViewById(R.id.image);
+        	image.setImageResource(R.drawable.icon);
+        	return dialog;
+        case PROGRESS:
+            // Диалог загрузки
+        	
+        	//ProgressDialog mProgressDialog = ProgressDialog.show(InflesActivity.this.getApplicationContext(), "Please, wait...", "Copying files...", true);
+            
+        	ProgressDialog dialogPr = new ProgressDialog(this);
+            dialogPr.setTitle("Please, wait...");
+            dialogPr.setMessage("Copying files...");
+            // без процентов
+            dialogPr.setIndeterminate(true);
+            return dialogPr;
+        default:
+            dialog = null;
+        }
+        return null;
+    }
+    
     private boolean copy(String fileName, String dir) {
 	    try {
 	    	
@@ -150,12 +266,10 @@ public class InflesActivity extends Activity {
               zin.closeEntry();
               fout.close();
             }
-
           }
           zin.close();
         } catch(Exception e) {
         }
-
       }
 
       private void dirChecker(String dir) {
@@ -177,5 +291,29 @@ public class InflesActivity extends Activity {
 	            }}
 	        return res;
 	        }
-
- }
+      
+    @Override
+  	public boolean onCreateOptionsMenu(Menu menu) {
+  		MenuInflater inflater = getMenuInflater();
+  		inflater.inflate(R.menu.menu, menu);
+  		return true;
+  	}  
+      
+    @Override
+  	public boolean onOptionsItemSelected(MenuItem item) {
+  		switch (item.getItemId()) {
+  		case R.id.delete:
+  			exit();
+  			DeleteApp();
+  			return true;
+  		case R.id.about:
+  			Log.i(LOG_TAG,"ABOUT!!");
+  			showDialog(ABOUT); 
+  			return true;
+  		case R.id.exit:
+  			exit();
+		return true;
+  		}
+  		return super.onOptionsItemSelected(item);
+  	}
+}
