@@ -44,6 +44,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -76,9 +77,9 @@ public class InflesActivity extends Activity {
 	 * SHOW_BUTTON - show 3 buttons after "RUN!" button
 	 */
 	boolean SHOW_BUTTON = true; 
-	boolean UNZIP = true;
-	boolean DEL_ZIP = true;
-	String COPY_DIR = "Infles";
+	boolean UNZIP = false;
+	boolean DEL_ZIP = false;
+	String COPY_DIR = "Jasmine/Smileys";
 	
 	
     @Override
@@ -87,9 +88,9 @@ public class InflesActivity extends Activity {
         setContentView(R.layout.main);
         
         Button ActButton = (Button)findViewById(R.id.ActButton);
-        Button Exit = (Button)findViewById(R.id.exit);
-        Button About = (Button)findViewById(R.id.about);
-        Button Delete = (Button)findViewById(R.id.delete);
+        ImageButton Exit = (ImageButton)findViewById(R.id.exit);
+        ImageButton About = (ImageButton)findViewById(R.id.about);
+        ImageButton Delete = (ImageButton)findViewById(R.id.delete);
         ActButton.setOnClickListener(ActListener);
         Exit.setOnClickListener(ExitListener);
         About.setOnClickListener(AboutListener);

@@ -4,10 +4,10 @@
     <LinearLayout android:id="@+id/linearLayout1" android:layout_width="match_parent" android:orientation="vertical" android:layout_height="wrap_content" android:layout_weight="10">
        <Button android:text="RUN!" android:id="@+id/ActButton" android:layout_width="fill_parent" android:textSize="100dip" android:layout_height="match_parent"></Button>
        </LinearLayout>
- <LinearLayout android:gravity="bottom" android:layout_weight="0.1" android:layout_height="wrap_content" android:layout_gravity="center" android:layout_width="wrap_content">
- 	<Button android:id="@+id/delete" android:background="@drawable/delete" android:gravity="left" android:layout_gravity="right" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-    <Button android:id="@+id/about" android:background="@drawable/about" android:layout_height="match_parent" android:gravity="center_horizontal" android:layout_gravity="center" android:layout_width="wrap_content"></Button>
-    <Button android:id="@+id/exit" android:background="@drawable/exit" android:layout_height="match_parent" android:gravity="right" android:layout_gravity="right" android:layout_width="wrap_content"></Button>
-</LinearLayout>
+ <LinearLayout android:gravity="bottom" android:layout_weight="0.1" android:layout_height="wrap_content" android:layout_gravity="center" android:layout_width="match_parent">
+     <ImageButton android:id="@+id/delete" android:src="@drawable/delete" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="1"></ImageButton>
+     <ImageButton android:id="@+id/about" android:src="@drawable/about" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="1"></ImageButton>
+     <ImageButton android:id="@+id/exit" android:src="@drawable/exit" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="1"></ImageButton>
+ </LinearLayout>
 
 </LinearLayout>
