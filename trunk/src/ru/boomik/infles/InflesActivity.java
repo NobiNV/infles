@@ -79,7 +79,7 @@ public class InflesActivity extends Activity {
 	boolean SHOW_BUTTON = true; 
 	boolean UNZIP = false;
 	boolean DEL_ZIP = false;
-	String COPY_DIR = "Jasmine/Smileys";
+	String COPY_DIR = "Infles";
 	
 	
     @Override
