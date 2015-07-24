@@ -1,0 +1,1 @@
+Install files for your app in SD card on Android OS.
